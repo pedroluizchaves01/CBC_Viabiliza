@@ -59,3 +59,14 @@ export const ITENS_CUSTO_PADRAO: { tipo: TipoItemCusto; rotulo: string }[] = [
   { tipo: 'taxas_licencas', rotulo: 'Taxas e licenças' },
   { tipo: 'bdi_administracao', rotulo: 'BDI / administração' },
 ]
+
+export const comparavelMercadoSchema = z.object({
+  id: z.string().uuid().optional(),
+  projetoId: z.string().uuid(),
+  enderecoBairro: z.string().min(2, 'Informe o endereço ou bairro'),
+  area: z.number().positive('Informe a área'),
+  preco: z.number().positive('Informe o preço'),
+  fonte: z.string().optional(),
+  url: z.string().optional(),
+})
+export type ComparavelMercado = z.infer<typeof comparavelMercadoSchema>

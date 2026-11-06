@@ -3,7 +3,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { ITENS_CUSTO_PADRAO } from './schemas'
-import type { ItemCusto, Projeto, StatusProjeto, TipoEmpreendimento, Unidade } from './schemas'
+import type { ComparavelMercado, ItemCusto, Projeto, StatusProjeto, TipoEmpreendimento, Unidade } from './schemas'
 
 type ProjetoRow = {
   id: string
@@ -178,5 +178,60 @@ export async function salvarItensCustoPadrao(
     valor: valores[tipo] ?? 0,
   }))
   const { error } = await supabase.from('itens_custo').upsert(linhas, { onConflict: 'projeto_id,tipo' })
+  if (error) throw error
+}
+
+type ComparavelRow = {
+  id: string
+  projeto_id: string
+  endereco_bairro: string | null
+  area: number
+  preco: number
+  fonte: string | null
+  url: string | null
+}
+
+function paraComparavel(row: ComparavelRow): ComparavelMercado {
+  return {
+    id: row.id,
+    projetoId: row.projeto_id,
+    enderecoBairro: row.endereco_bairro ?? '',
+    area: row.area,
+    preco: row.preco,
+    fonte: row.fonte ?? undefined,
+    url: row.url ?? undefined,
+  }
+}
+
+export async function listarComparaveis(projetoId: string): Promise<ComparavelMercado[]> {
+  const { data, error } = await supabase
+    .from('comparaveis_mercado')
+    .select('id, projeto_id, endereco_bairro, area, preco, fonte, url')
+    .eq('projeto_id', projetoId)
+    .order('buscado_em', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map(paraComparavel)
+}
+
+export async function criarComparavel(dados: Omit<ComparavelMercado, 'id'>): Promise<ComparavelMercado> {
+  const { data, error } = await supabase
+    .from('comparaveis_mercado')
+    .insert({
+      projeto_id: dados.projetoId,
+      endereco_bairro: dados.enderecoBairro,
+      area: dados.area,
+      preco: dados.preco,
+      preco_m2: dados.preco / dados.area,
+      fonte: dados.fonte,
+      url: dados.url,
+    })
+    .select('id, projeto_id, endereco_bairro, area, preco, fonte, url')
+    .single()
+  if (error) throw error
+  return paraComparavel(data)
+}
+
+export async function removerComparavel(id: string): Promise<void> {
+  const { error } = await supabase.from('comparaveis_mercado').delete().eq('id', id)
   if (error) throw error
 }

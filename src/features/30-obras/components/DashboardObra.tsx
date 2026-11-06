@@ -3,10 +3,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { obterProjetoComInvestidor, listarItensCusto, obterUnidadePrincipal } from '../api'
+import { obterProjetoComInvestidor, listarComparaveis, listarItensCusto, obterUnidadePrincipal } from '../api'
 import { ListaProjetos } from './ListaProjetos'
 import { SecaoDadosGerais } from './SecaoDadosGerais'
 import { SecaoTerrenoCustos } from './SecaoTerrenoCustos'
+import { SecaoPrecoVenda } from './SecaoPrecoVenda'
 import { SecaoEmBreve } from './SecaoEmBreve'
 
 const ABAS = [
@@ -24,8 +25,10 @@ export function DashboardObra() {
   const projetoQuery = useQuery({ queryKey: ['projeto', id], queryFn: () => obterProjetoComInvestidor(id) })
   const unidadeQuery = useQuery({ queryKey: ['unidade', id], queryFn: () => obterUnidadePrincipal(id) })
   const itensCustoQuery = useQuery({ queryKey: ['itensCusto', id], queryFn: () => listarItensCusto(id) })
+  const comparaveisQuery = useQuery({ queryKey: ['comparaveis', id], queryFn: () => listarComparaveis(id) })
 
-  const carregando = projetoQuery.isLoading || unidadeQuery.isLoading || itensCustoQuery.isLoading
+  const carregando =
+    projetoQuery.isLoading || unidadeQuery.isLoading || itensCustoQuery.isLoading || comparaveisQuery.isLoading
 
   return (
     <div className="min-h-screen bg-black text-[#f5f3ef]">
@@ -72,7 +75,13 @@ export function DashboardObra() {
                     itensCusto={itensCustoQuery.data ?? []}
                   />
                 )}
-                <SecaoEmBreve id="preco-venda" titulo="Preço de venda e pesquisa de mercado" />
+                {unidadeQuery.data && (
+                  <SecaoPrecoVenda
+                    projetoId={id}
+                    unidade={unidadeQuery.data}
+                    comparaveis={comparaveisQuery.data ?? []}
+                  />
+                )}
                 <SecaoEmBreve id="cronograma" titulo="Cronograma físico-financeiro" />
                 <SecaoEmBreve id="financiamento" titulo="Financiamento" />
               </div>
